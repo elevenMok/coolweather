@@ -1,8 +1,10 @@
 package com.coolweather.android;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,9 +69,9 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area , container , false);
-        titleView = (TextView) view.findViewById(R.id.title_text);
-        backButton = (Button) view.findViewById(R.id.back_button);
-        listView = (ListView) view.findViewById(R.id.list_view);
+        titleView = view.findViewById(R.id.title_text);
+        backButton = view.findViewById(R.id.back_button);
+        listView = view.findViewById(R.id.list_view);
         adapter = new ArrayAdapter<>(getContext() , android.R.layout.simple_list_item_1 , dataList);
         listView.setAdapter(adapter);
         return view;
@@ -83,10 +85,22 @@ public class ChooseAreaFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 if (currentLevel == LEVEL_PROVINCE) {
                     selectedProvince = provinceList.get(position);
+                    Log.d("界面在_________1" , selectedProvince.getProvinceName());
+
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
-                    querycounties();
+                    Log.d("界面在_________2" , selectedCity.getCityName());
+
+                    queryCounties();
+                } else if (currentLevel == LEVEL_COUNTY) {
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Log.d("界面在_________" , weatherId);
+                    Intent intent = new Intent(getActivity() , WeatherActivity.class);
+                    Log.d("Fragment" , "跳转至WeatherActivity.class");
+                    intent.putExtra("weather_id" , weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
@@ -119,6 +133,7 @@ public class ChooseAreaFragment extends Fragment {
             currentLevel = LEVEL_PROVINCE;
         } else {
             String address = "http://guolin.tech/api/china";
+            Log.d("接收数据china" , address);
             queryFromServer(address , "province");
         }
     }
@@ -138,11 +153,12 @@ public class ChooseAreaFragment extends Fragment {
         } else {
             int provinceCode = selectedProvince.getProvinceCode();
             String address = "http://guolin.tech/api/china/" + provinceCode;
+            Log.d("接收数据city" , address);
             queryFromServer(address , "city");
         }
     }
 
-    private void querycounties() {
+    private void queryCounties() {
         titleView.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
         countyList = DataSupport.where("cityid = ?" , String.valueOf(selectedCity.getId())).find(County.class);
@@ -157,7 +173,8 @@ public class ChooseAreaFragment extends Fragment {
         } else {
             int provinceCode = selectedProvince.getProvinceCode();
             int cityCode = selectedCity.getCityCode();
-            String address = "http://guolin.tech/api/china" + provinceCode + "/" + cityCode;
+            String address = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
+            Log.d("接收数据county" , address);
             queryFromServer(address , "county");
         }
     }
@@ -186,7 +203,7 @@ public class ChooseAreaFragment extends Fragment {
                 } else if ("city".equals(type)) {
                     result = Utility.handleCityResponse(responseText , selectedProvince.getId());
                 } else if ("county".equals(type)) {
-                    result = Utility.handleCountyReponse(responseText , selectedCity.getId());
+                    result = Utility.handleCountyResponse(responseText , selectedCity.getId());
                 }
 
                 if (result) {
@@ -199,7 +216,7 @@ public class ChooseAreaFragment extends Fragment {
                             } else if ("city".equals(type)) {
                                 queryCities();
                             } else if ("county".equals(type)) {
-                                querycounties();
+                                queryCounties();
                             }
                         }
                     });
