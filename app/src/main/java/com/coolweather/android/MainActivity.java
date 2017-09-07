@@ -12,6 +12,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //检索context(这里制定的是MainActivity)中键值对中的键，是否有weather存在
+        //这里的weather对应的是WeatherActivity中requestWeather方法中putString记录下来的键值对
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getString("weather" , null) != null) {
             Intent intent = new Intent(this , WeatherActivity.class);
